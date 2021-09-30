@@ -23,13 +23,13 @@ Una vez dentro, en el menú de opciones, dentro del apartado de pagos, ingresara
 
 Depués en la opción **Prestashop**, en la primera sección, podrá generar y recuperar sus llaves de prueba.
 
-<img src="https://rapi-doc.s3.amazonaws.com/Captura+de+Pantalla+2021-08-03+a+la(s)+11.48.57.png" style="display: block; margin-left: auto; margin-right: auto;"/>
+<img width="779" alt="testing-keys" src="https://user-images.githubusercontent.com/88348069/135500623-f05a1655-3dcc-4df9-89bb-74f81006cc44.png" style="display: block; margin-left: auto; margin-right: auto;">
 
 ### 2. Configuración de módulo Checkout
 
 Aquí se configura la dirección a donde quiere regresar a sus clientes una vez que se ha efectuado el pago, entre otras configuraciones.
 
-<img src="https://rapi-doc.s3.amazonaws.com/Captura+de+Pantalla+2021-08-03+a+la(s)+11.45.21.png" style="display: block; margin-left: auto; margin-right: auto;"/>
+<img width="816" alt="redirect-config" src="https://user-images.githubusercontent.com/88348069/135501874-3a18fa09-f7d5-4100-b9be-bed71d3436a8.png" style="display: block; margin-left: auto; margin-right: auto;">
 
 ### 3. Descarga del módulo
 

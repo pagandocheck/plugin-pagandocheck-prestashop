@@ -1,9 +1,9 @@
 <?php
 
 // La url también está en el archivo de prestashop-payment-module/pagandopayment/pagandopayment.php
-const BASE_URI = 'https://api.pagandocheck.com/v1/';
-const API_URI = 'https://api.pagandocheck.com/v1/pagando/';
-const CHECKOUT_URI = 'https://checkout.pagandocheck.com/';
+	const BASE_URI = 'https://api.pagandocheck.com/v1/';
+ 	const API_URI = 'https://api.pagandocheck.com/v1/pagando/';
+ 	const CHECKOUT_URI = 'https://checkout.pagandocheck.com/';
 
 class Pagando
 {
@@ -41,19 +41,20 @@ class Pagando
         $this->cart = $cart;
         $this->card = $card;
         $this->promotion = $promotion;
-        $this->card_name = $card->card_name;
-        $this->card_no = $card->card_no;
-        $this->card_cvv = $card->cvv;
-        $this->card_month = $card->month;
-        $this->card_year = $card->year;
-
+      	$this->card_name = $card['card_name'];
+      	$this->card_no = $card['card_no'];
+      	$this->card_cvv = $card['cvv'];
+      	$this->card_month = $card['month'];
+		$this->card_year = $card['year'];
+      
         if ($cart != "" && $cart != null) {
             $this->setData($cart);
         }
         $this->payment_concept = $payment_concept;
 
         $this->cartId = $cart->id;
-        if ($processPayment) {
+
+        if($processPayment) {  
             $this->process();
         }
     }

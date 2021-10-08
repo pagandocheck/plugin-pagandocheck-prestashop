@@ -65,7 +65,6 @@ class Pagando
           $this->card_year = $card["year"];
         };
         if (!empty($cart)) {
-			//No se si se usa
         	$this->cart = $cart;
             $this->setData($cart);
         	$this->cartId = $cart->id;

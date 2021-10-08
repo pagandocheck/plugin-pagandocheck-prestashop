@@ -1,9 +1,9 @@
 <?php
 
 // La url también está en el archivo de prestashop-payment-module/pagandopayment/pagandopayment.php
-	const BASE_URI = 'https://api.pagandocheck.com/v1/';
- 	const API_URI = 'https://api.pagandocheck.com/v1/pagando/';
- 	const CHECKOUT_URI = 'https://checkout.pagandocheck.com/';
+const BASE_URI = 'https://api.pagandocheck.com/v1/';
+const API_URI = 'https://api.pagandocheck.com/v1/pagando/';
+const CHECKOUT_URI = 'https://checkout.pagandocheck.com/';
 
 class Pagando
 {
@@ -12,49 +12,67 @@ class Pagando
     protected $apiURI = API_URI;
     protected $checkoutURI = CHECKOUT_URI;
     protected $api_user,
-              $api_pass,
-              $token,
-              $user_id,
-              $card_id,
-              $cart,
-              $card,
-              $promotion,
-              $amount,
-              $customer,
-              $address,
-              $state,
-              $payment_concept,
-              $order_id,
-              $aft_token;
-
+        $api_pass,
+        $token,
+        $user_id,
+        $card_id,
+        $cart,
+        $cartId,
+        $card,
+        $promotion,
+        $amount,
+        $customer,
+        $address,
+        $delivery,
+        $state,
+        $payment_concept,
+        $order_id,
+        $aft_token,
+        $card_name,
+        $card_no,
+        $card_cvv,
+        $card_month,
+        $card_year;
 
     function __construct($user, $pass, $order_params = null, $processPayment = false) {
-        $cart = $order_params['cart'];
-        $card = $order_params['card'];
-        $promotion = $order_params['promotion'];
-        $payment_concept = $order_params['payment_concept'];
-
-        $this->api_user = $user;
+      	$this->api_user = $user;
         $this->api_pass = $pass;
-        $this->aft_token = $order_params['aft_token'];
-
-        $this->cart = $cart;
-        $this->card = $card;
-        $this->promotion = $promotion;
-      	$this->card_name = $card['card_name'];
-      	$this->card_no = $card['card_no'];
-      	$this->card_cvv = $card['cvv'];
-      	$this->card_month = $card['month'];
-		$this->card_year = $card['year'];
-      
-        if ($cart != "" && $cart != null) {
+      	if(!empty($order_params['cart'])){
+        	$cart = $order_params['cart'];
+        };
+      	if(!empty($order_params['card'])){
+        	$card = $order_params['card'];
+        };
+      	if(!empty($order_params['promotion'])){
+        	$promotion = $order_params['promotion'];
+        };
+      	if(!empty($order_params['payment_concept'])){
+          //$payment_concept = $order_params['api_concept'];
+	        $payment_concept = $order_params['payment_concept'];
+        };
+      	if(!empty($order_params['aft_token'])){
+        	$this->aft_token = $order_params['aft_token'];
+        };
+        if(!empty($promotion)){
+      		$this->promotion = $promotion;
+        };
+      	if(!empty($card)){
+          $this->card = $card;
+          $this->card_name = $card["card_name"];
+          $this->card_no = $card["card_no"];
+          $this->card_cvv =$card["cvv"];
+          $this->card_month = $card["month"];
+          $this->card_year = $card["year"];
+        };
+        if (!empty($cart)) {
+        	$this->cart = $cart;
             $this->setData($cart);
+        	$this->cartId = $cart->id;
         }
-        $this->payment_concept = $payment_concept;
-
-        $this->cartId = $cart->id;
-
-        if($processPayment) {  
+      	if(!empty($payment_concept)){
+        	$this->payment_concept = $payment_concept;
+        };
+        if($processPayment) {
             $this->process();
         }
     }
@@ -62,6 +80,7 @@ class Pagando
     function setData($cart){
         $this->customer = new Customer($cart->id_customer);
         $this->address = new Address($cart->id_address_invoice);
+        $this->delivery = new Address($cart->id_address_delivery);
         $this->state = new State($this->address->id_state);
         $this->amount = (float)$cart->getOrderTotal(true, Cart::BOTH);
     }
@@ -95,6 +114,8 @@ class Pagando
     protected function getEcommerceData() {
         $customer = $this->customer;
         $address = $this->address;
+        $delivery = $this->delivery;
+        $tmptState = new State($delivery->id_state);
 
         $data['email'] = $customer->email;
         $data['name'] = $customer->firstname;
@@ -105,10 +126,46 @@ class Pagando
         $data['zipCode'] = $address->postcode;
         $data['city'] = $address->city;
         $data['state'] = $this->state->name;
+        $data['country'] = $address->country;
         $data['cartId'] = $this->cartId;
         $data['total'] = $this->amount;
         $data['paymentToken'] = md5(Configuration::get('PAGANDO_PASSWORD').$data['cartId'].$data['total']);;
         $data['originECommerce'] = 'PRESTASHOP';
+        $data['productsList'] = array();
+
+        // Get delivery information
+        $shippingInfo['street'] = $delivery->address1;
+        $shippingInfo['noExt'] = '11';
+        $shippingInfo['district'] = $delivery->address2;
+        $shippingInfo['zipCode'] = $delivery->postcode;
+        $shippingInfo['city'] = $delivery->city;
+        $shippingInfo['state'] = $tmptState->name;
+        $shippingInfo['country'] = $delivery->country;
+
+        $data['shippingInfo'] = $shippingInfo;
+
+        // Choose only necessary data from products
+        foreach ($this->cart->getProducts(true) as $item) {
+
+            $tempItem['quantity'] = $item["cart_quantity"];
+            $tempItem['productSku'] = $item["id_product"];
+            $tempItem['productName'] = $item["name"];
+            $tempItem['productType'] = $item["category"];
+            $tempItem['unitPrice'] = $item["price_wt"];
+            $tempItem['totalAmount'] = $item["total_wt"];
+
+            array_push($data['productsList'], $tempItem);
+        }
+
+        // Adding shipping cost to productsList
+        $shipItem['quantity'] = 1;
+        $shipItem['productSku'] = 'SHIP';
+        $shipItem['productName'] = 'SHIPPING_COST';
+        $shipItem['productType'] = 'SHIPPING_COST';
+        $shipItem['unitPrice'] = $this->cart->getPackageShippingCost();
+        $shipItem['totalAmount'] = $this->cart->getPackageShippingCost();;
+
+        array_push($data['productsList'], $shipItem);
 
         return $data;
 
@@ -122,6 +179,7 @@ class Pagando
             $user['birthday'] = $this->customer->birthday;
         }
         $user['phone'] = $this->address->phone;
+
         return $user;
     }
 
@@ -171,10 +229,42 @@ class Pagando
         $data['amount']   = $this->amount;
         $data['concept']  = $this->payment_concept;
         $data['orderId']  = $this->order_id;
+        $data['street'] = $this->address->address1;
+        $data['district'] = $this->address->address2;
+        $data['zipCode'] = $this->address->postcode;
+        $data['city'] = $this->address->city;
+        $data['state'] = $this->state->name;
+        $data['country'] = $this->address->country;
+        $data['items']  = array();
+
+        // Choose only necessary data from products
+        foreach ($this->cart->getProducts(true) as $item) {
+
+            $tempItem['quantity'] = $item["cart_quantity"];
+            $tempItem['productSku'] = $item["id_product"];
+            $tempItem['productName'] = $item["name"];
+            $tempItem['productType'] = $item["category"];
+            $tempItem['unitPrice'] = $item["price_wt"];
+            $tempItem['totalAmount'] = $item["total_wt"];
+
+            array_push($data['items'], $tempItem);
+        }
+
+        // Adding shipping cost to productsList
+        $shipItem['quantity'] = 1;
+        $shipItem['productSku'] = 'SHIP';
+        $shipItem['productName'] = 'SHIPPING_COST';
+        $shipItem['productType'] = 'SHIPPING_COST';
+        $shipItem['unitPrice'] = $this->cart->getPackageShippingCost();
+        $shipItem['totalAmount'] = $this->cart->getPackageShippingCost();;
+
+        array_push($data['items'], $shipItem);
 
         if ($this->promotion['promotionType'] != null) {
             $data['paymentPromotion'] = $this->promotion;
         }
+
+
 
         $res = $this->post('orders/create-order', $data);
 

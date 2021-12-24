@@ -86,9 +86,12 @@ class PagandoPayment extends PaymentModule
 
         $payment_options = [];
 
-        //array_push($payment_options, $this->getExternalPaymentOption());
-        array_push($payment_options, $this->getExternalPaymentGuestOption());
-        array_push($payment_options, $this->getEmbeddedPaymentOption($params['cart']));
+        if ($this->getConfigFieldsValues()['PAYMENT_METHODS_ALLOWED_GUEST']) {
+            array_push($payment_options, $this->getExternalPaymentGuestOption());
+        }
+        if ($this->getConfigFieldsValues()['PAYMENT_METHODS_ALLOWED_EMBEDDED']) {
+            array_push($payment_options, $this->getEmbeddedPaymentOption($params['cart']));
+        }
 
         return $payment_options;
     }
@@ -189,6 +192,8 @@ class PagandoPayment extends PaymentModule
             Configuration::updateValue('PAGANDO_PASSWORD', Tools::getValue('PAGANDO_PASSWORD'));
             Configuration::updateValue('PAYMENT_MODE', Tools::getValue('PAYMENT_MODE'));
             Configuration::updateValue('PAYMENT_CONCEPT', Tools::getValue('PAYMENT_CONCEPT'));
+            Configuration::updateValue('PAYMENT_METHODS_ALLOWED_EMBEDDED', Tools::getValue('PAYMENT_METHODS_ALLOWED_EMBEDDED'));
+            Configuration::updateValue('PAYMENT_METHODS_ALLOWED_GUEST', Tools::getValue('PAYMENT_METHODS_ALLOWED_GUEST'));
         }
         $this->_html .= $this->displayConfirmation($this->trans('Settings updated', array(), 'Admin.Notifications.Success'));
     }
@@ -247,6 +252,32 @@ class PagandoPayment extends PaymentModule
                         'desc' => $this->trans('This is the concept that your clients will see in their accounts. If empty we will use the name of your organization in Pagando', array(), 'Modules.Paymentexample.Admin'),
                         'name' => 'PAYMENT_CONCEPT',
                     ),
+                    array(
+                        'type' => 'text',
+                        'label' => $this->trans('Guest payment', array(), 'Modules.Paymentexample.Admin'),
+                        'desc' => $this->trans('Allow guest payment', array(), 'Modules.Paymentexample.Admin'),
+                        'name' => 'GUEST_PAYMENT_ALLOW',
+                    ),
+                    array(
+                        'type' => 'checkbox',
+                        'label' => $this->trans('Payment methods', array(), 'Modules.Paymentexample.Admin'),
+                        'desc' => $this->trans('Payment methods allowed during checkout', array(), 'Modules.Paymentexample.Admin'),
+                        'name' => 'PAYMENT_METHODS_ALLOWED',
+                        'values'  => array(
+                            'query' => array(
+                                array (
+                                    'id' => 'EMBEDDED',
+                                    'name' => 'Embedded'
+                                ),
+                                array (
+                                    'id' => 'GUEST',
+                                    'name' => 'Guest'
+                                ),
+                            ),
+                            'id'    => 'id',
+                            'name'  => 'name'
+                        )
+                    ),
                 ),
                 'submit' => array(
                     'title' => $this->trans('Save', array(), 'Admin.Actions'),
@@ -277,6 +308,9 @@ class PagandoPayment extends PaymentModule
             'PAGANDO_PASSWORD' => Tools::getValue('PAGANDO_PASSWORD', Configuration::get('PAGANDO_PASSWORD')),
             'PAYMENT_MODE' => Tools::getValue('PAYMENT_MODE', Configuration::get('PAYMENT_MODE')),
             'PAYMENT_CONCEPT' => Tools::getValue('PAYMENT_CONCEPT', Configuration::get('PAYMENT_CONCEPT')),
+            'PAYMENT_CONCEPT' => Tools::getValue('PAYMENT_CONCEPT', Configuration::get('PAYMENT_CONCEPT')),
+            'PAYMENT_METHODS_ALLOWED_EMBEDDED' => Tools::getValue('PAYMENT_METHODS_ALLOWED_EMBEDDED', Configuration::get('PAYMENT_METHODS_ALLOWED_EMBEDDED')),
+            'PAYMENT_METHODS_ALLOWED_GUEST' => Tools::getValue('PAYMENT_METHODS_ALLOWED_GUEST', Configuration::get('PAYMENT_METHODS_ALLOWED_GUEST')),
         );
     }
 }

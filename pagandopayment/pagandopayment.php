@@ -99,9 +99,8 @@ class PagandoPayment extends PaymentModule
     public function getEmbeddedPaymentOption($cart)
     {
         $embeddedOption = new PaymentOption();
-        $embeddedOption->setCallToActionText($this->l('Pagar con Pagando Check'))
-                    ->setForm($this->generateForm($cart))
-                    ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/pagando-logo-horizontal.svg'));
+        $embeddedOption->setCallToActionText($this->l('Pagar con tarjeta de crédito o débito'))
+                    ->setForm($this->generateForm($cart));
 
         return $embeddedOption;
     }
@@ -124,8 +123,9 @@ class PagandoPayment extends PaymentModule
     public function getExternalPaymentOption()
     {
         $externalOption = new PaymentOption();
-        $externalOption->setCallToActionText($this->l('Pagar con tarjeta de crédito o débito'))
+        $externalOption->setCallToActionText($this->l('Pagar con '))
             ->setAction($this->context->link->getModuleLink($this->name, 'middleware', array('mode' => 'user'), true))
+            ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/pagando-logo-horizontal.svg'))
             ->setAdditionalInformation($this->context->smarty->fetch('module:pagandopayment/views/templates/front/pagando_checkout_info.tpl'));
 
         return $externalOption;
@@ -134,8 +134,9 @@ class PagandoPayment extends PaymentModule
     public function getExternalPaymentGuestOption()
     {
         $externalOption = new PaymentOption();
-        $externalOption->setCallToActionText($this->l('Pagar con tarjeta de crédito o débito'))
+        $externalOption->setCallToActionText($this->l('Pagar con '))
             ->setAction($this->context->link->getModuleLink($this->name, 'middleware', array(), true))
+            ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/pagando-logo-horizontal.svg'))
             ->setAdditionalInformation($this->context->smarty->fetch('module:pagandopayment/views/templates/front/pagando_checkout_guest_info.tpl'));
 
         return $externalOption;
@@ -251,12 +252,6 @@ class PagandoPayment extends PaymentModule
                         'label' => $this->trans('Payment concept', array(), 'Modules.Paymentexample.Admin'),
                         'desc' => $this->trans('This is the concept that your clients will see in their accounts. If empty we will use the name of your organization in Pagando', array(), 'Modules.Paymentexample.Admin'),
                         'name' => 'PAYMENT_CONCEPT',
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->trans('Guest payment', array(), 'Modules.Paymentexample.Admin'),
-                        'desc' => $this->trans('Allow guest payment', array(), 'Modules.Paymentexample.Admin'),
-                        'name' => 'GUEST_PAYMENT_ALLOW',
                     ),
                     array(
                         'type' => 'checkbox',

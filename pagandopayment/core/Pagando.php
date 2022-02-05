@@ -264,8 +264,6 @@ class Pagando
             $data['paymentPromotion'] = $this->promotion;
         }
 
-
-
         $res = $this->post('orders/create-order', $data);
 
         if(!$res->error){
@@ -353,7 +351,11 @@ class Pagando
 
         $return = new stdClass();
 
-        if(!empty($result->data)){
+        if ($result->error) {
+            $this->error = 1;
+            $return->error = 1;
+            $return->message = $result->message;
+        } else if(!empty($result->data)){
             $this->error = 0;
             $return->error = 0;
             $return->data = $result->data;
@@ -361,10 +363,6 @@ class Pagando
             $this->error = 0;
             $return->error = 0;
             $return->data = $result->object;
-        } else {
-            $this->error = 1;
-            $return->error = 1;
-            $return->message = $result->message;
         }
 
         return $return;

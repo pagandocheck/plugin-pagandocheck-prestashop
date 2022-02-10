@@ -99,8 +99,10 @@ class Pagando
             if(!empty($this->user_id)){
                 $this->addCard($this->card);
                 if(!empty($this->card_id)){
-                    $this->orderCreate();
-
+                    $resOrder = $this->orderCreate();
+                    if($resOrder->error){
+                        return ['error'=>1, 'msg' => $resOrder->message];
+                    }
                     $get_data = (Object)[
                         'orderId' => $this->order_id,
                     ];
@@ -270,7 +272,7 @@ class Pagando
             $this->id = $res->data->folio;
         }
 
-        return $res->error;
+        return $res;
     }
 
     function createEcommerceOrder() {
@@ -352,16 +354,16 @@ class Pagando
         $return = new stdClass();
 
         if ($result->error) {
-            $this->error = 1;
-            $return->error = 1;
+            $this->error = true;
+            $return->error = true;
             $return->message = $result->message;
         } else if(!empty($result->data)){
-            $this->error = 0;
-            $return->error = 0;
+            $this->error = false;
+            $return->error = false;
             $return->data = $result->data;
         } else if(!empty($result->object)){
-            $this->error = 0;
-            $return->error = 0;
+            $this->error = false;
+            $return->error = false;
             $return->data = $result->object;
         }
 

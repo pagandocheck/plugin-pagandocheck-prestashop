@@ -40,6 +40,7 @@
           <div class="">
             <input id="card_pan" placeholder="Ingresa los 16 dígitos de tu tarjeta" type="text">
             <input id="card_pan_no_spaces" type="hidden" name="card_pan">
+            <input id="card_brand" name="card_brand" type="hidden">
           </div>
         </div>
       </div>
@@ -330,6 +331,7 @@
   const carnetBinsRegexp = new RegExp(`(${carnetBinsRegexpConcat})`);
 
   let ccNumberInput = document.querySelector('#card_pan');
+  let ccBrandInput = document.querySelector('#card_brand');
   let ccNumberInputNoSpaces = document.querySelector('#card_pan_no_spaces');
   let ccNumberPattern = /^\d{0,16}$/g;
   let ccNumberSeparator = " ";
@@ -354,6 +356,7 @@
     carnet: carnetBinsRegexp,
     visa: /^4/,
     mastercard: /^5/,
+    americanexpress: /^3[47][0-9]{13}$/,
   };
 		
   let mask = (value, limit, separator) => {
@@ -402,7 +405,7 @@
 
     const panNoSpaces = el.value.replace(/ /g, '');
     ccNumberInputNoSpaces.value = panNoSpaces;
-
+    ccBrandInput.value = ccCardType;
     if (panNoSpaces.length >= 8 && ccCardType && ccCardType.length > 0) {
       fetchPromotions(panNoSpaces.substring(0, 8), ccCardType.toUpperCase(), amount);
     }

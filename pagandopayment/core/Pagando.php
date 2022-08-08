@@ -32,7 +32,8 @@ class Pagando
         $card_no,
         $card_cvv,
         $card_month,
-        $card_year;
+        $card_year,
+        $card_brand;
 
     function __construct($user, $pass, $order_params = null, $processPayment = false) {
       	$this->api_user = $user;
@@ -63,6 +64,7 @@ class Pagando
           $this->card_cvv =$card["cvv"];
           $this->card_month = $card["month"];
           $this->card_year = $card["year"];
+          $this->card_brand = $card["card_brand"];
         };
         if (!empty($cart)) {
         	$this->cart = $cart;
@@ -101,15 +103,18 @@ class Pagando
                 if(!empty($this->card_id)){
                     $resOrder = $this->orderCreate();
                     if($resOrder->error){
+                        $this->error = true;
                         return ['error'=>1, 'msg' => $resOrder->message];
                     }
                     $get_data = (Object)[
                         'orderId' => $this->order_id,
                     ];
                     $this->getEcommerceOrderData($get_data);
+                    return ['error'=>0, 'msg' => ''];
                 }
             }
         }
+        $this->error = true;
         return ['error'=>1, 'msg' => $this->error_msg];
     }
 
@@ -223,9 +228,23 @@ class Pagando
 
     function orderCreate()
     {
-
+        if($this->card_brand == 'americanexpress'){
+            $tempAmex['pan'] = $this->card["pan"];
+            $tempAmex['exp_month'] = $this->card["exp_month"];
+            $tempAmex['exp_year'] = $this->card["exp_year"];
+            $tempAmex['name'] = $this->card["name"];
+            $tempAmex['country'] = $this->address->country;
+            $tempAmex['street'] = $this->address->address1;
+            $tempAmex['noExt'] = $this->card["noExt"];
+            $tempAmex['district'] = $this->address->address2;
+            $tempAmex['zipCode'] = $this->address->postcode;
+            $tempAmex['city'] = $this->address->city;
+            $tempAmex['state'] = $this->state->name;
+            $data["infoAmex"] = $tempAmex;
+        }else{
+            $data['cardId']   = $this->card_id;
+        }
         $data['userId']   = $this->user_id;
-        $data['cardId']   = $this->card_id;
         $data['aftToken'] = $this->aft_token;
         $data['pin']      = $this->card_cvv;
         $data['amount']   = $this->amount;
@@ -344,27 +363,32 @@ class Pagando
         curl_close($curl);
 
         $result = json_decode($response);
+        $return = new stdClass();
 
         if ($result !== null && $result->message !== null) {
+            $this->error = true;
             $this->error_msg = $result->message;
         } else {
             $this->error_msg = 'Ocurrió un error inesperado';
         }
 
-        $return = new stdClass();
-
-        if ($result->error) {
-            $this->error = true;
-            $return->error = true;
-            $return->message = $result->message;
-        } else if(!empty($result->data)){
+        if(!empty($result->data) && !$result->error){
             $this->error = false;
             $return->error = false;
             $return->data = $result->data;
-        } else if(!empty($result->object)){
+        } else if(!empty($result->object) && !$result->error){
             $this->error = false;
             $return->error = false;
             $return->data = $result->object;
+        } else {
+            $this->error = true;
+            $return->error = true;
+            $return->message = $result->message;
+            if (!empty($result->message)) {
+                $this->error_msg = $result->message;
+            } else {
+                $this->error_msg = 'Ocurrió un error inesperado';
+            }
         }
 
         return $return;

@@ -75,6 +75,7 @@ class PagandoPaymentValidationModuleFrontController extends ModuleFrontControlle
             'cvv' => $_GET['card_cvv'],
             'exp_month' => $_GET['card_exp_month'],
             'exp_year' => $_GET['card_exp_year'],
+            'card_brand' => $_GET['card_brand'],
             'name' => $_GET['card_name'],
             'street' => $_GET['card_street'],
             'noExt' => $_GET['card_noExt'],
